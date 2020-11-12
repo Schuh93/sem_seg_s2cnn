@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/tensorflow:20.10-tf2-py3
+
+%files
+    requirements.txt
+
+
+%post
+    pip3 install -r requirements.txt
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    
+%runscript
+    ls

@@ -38,3 +38,21 @@ def complex_mm(x, y, conj_x=False, conj_y=False):
         zi = - torch.mm(xr, yi) - torch.mm(xi, yr)
 
     return torch.stack((zr, zi), 2)
+
+
+def complex_sum(x, dim=0):
+    '''
+    :param x: input tensor
+    :param dim: dimension to be summed over
+    :return: input tensor with slot dim summed over
+    '''
+
+    assert x.size(-1) == 2
+
+    xr = x[..., 0]
+    xi = x[..., 1]
+
+    sum_r = torch.sum(xr, dim)
+    sum_i = torch.sum(xi, dim)
+
+    return torch.stack((sum_r, sum_i), sum_r.dim())

@@ -87,12 +87,16 @@ def so3_rfft(x, for_grad=False, b_out=None):
 
     output = x.new_empty((nspec, nbatch, 2))
     if x.is_cuda and x.dtype == torch.float32:
-        x = torch.rfft(x, 2)  # [batch, beta, m, n, complex]
+        # x = torch.rfft(x, 2)  # [batch, beta, m, n, complex]
         cuda_kernel = _setup_so3fft_cuda_kernel(b_in=b_in, b_out=b_out, nbatch=nbatch, real_input=True, device=x.device.index)
+        x = torch.fft.rfft2(x)
+        x = torch.view_as_real(x)
         cuda_kernel(x, wigner, output)
     else:
         # TODO use torch.rfft
-        x = torch.fft(torch.stack((x, torch.zeros_like(x)), dim=-1), 2)
+        # x = torch.fft(torch.stack((x, torch.zeros_like(x)), dim=-1), 2)
+        x = torch.fft.fft2(x)
+        x = torch.view_as_real(x)
         if b_in < b_out:
             output.fill_(0)
         for l in range(b_out):
@@ -151,7 +155,10 @@ def so3_ifft(x, for_grad=False, b_out=None):
                 output[:, :, :l1 + 1, -l1:] += out[:, :, l: l + l1 + 1, l - l1: l]
                 output[:, :, -l1:, -l1:] += out[:, :, l - l1: l, l - l1: l]
 
-    output = torch.ifft(output, 2) * output.size(-2) ** 2  # [batch, beta, alpha, gamma, complex]    
+    output = torch.view_as_complex(output)
+    output = torch.fft.ifft2(output)
+    output = torch.view_as_real(output)
+    output = output * output.size(-2) ** 2  # [batch, beta, alpha, gamma, complex]
     output = output.view(*batch_size, 2 * b_out, 2 * b_out, 2 * b_out, 2)
     return output
 
@@ -195,7 +202,10 @@ def so3_rifft(x, for_grad=False, b_out=None):
                 output[:, :, :l1 + 1, -l1:] += out[:, :, l: l + l1 + 1, l - l1: l]
                 output[:, :, -l1:, -l1:] += out[:, :, l - l1: l, l - l1: l]
 
-    output = torch.ifft(output, 2) * output.size(-2) ** 2  # [batch, beta, alpha, gamma, complex]
+    output = torch.view_as_complex(output)
+    output = torch.fft.ifft2(output)
+    output = torch.view_as_real(output)
+    output = output * output.size(-2) ** 2  # [batch, beta, alpha, gamma, complex]
     output = output[..., 0]  # [batch, beta, alpha, gamma]
     output = output.contiguous()
 

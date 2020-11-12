@@ -65,7 +65,7 @@ class SO3Shortcut(Module):
 
     def __init__(self, nfeature_in, nfeature_out, b_in, b_out):
         super(SO3Shortcut, self).__init__()
-        assert b_out <= b_in
+        # assert b_out <= b_in
 
         if (nfeature_in != nfeature_out) or (b_in != b_out):
             self.conv = SO3Convolution(
