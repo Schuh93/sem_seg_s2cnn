@@ -12,17 +12,23 @@ More details on the `SO3ToS2` layer, the semantic segmentation dataset and the n
 
 # Reference
 
-[1] *Equivariance versus Augmentation for Spherical Images* by Jan E. Gerken, Oscar Carlsson, Hampus Linander, Fredrik Ohlsson, Christoffer Petersson and Daniel Persson, [arXiv:2202.03990](http://arxiv.org/abs/2202.03990)
+[1] *Equivariance versus Augmentation for Spherical Images*, Jan E. Gerken, Oscar Carlsson, Hampus Linander, Fredrik Ohlsson, Christoffer Petersson and Daniel Persson, Proceedings of the 39th International Conference on Machine Learning; PMLR, 2022; pp 7404–7421 [arXiv:2202.03990](http://arxiv.org/abs/2202.03990)
 
 If you use this code, please cite
 
 ```
-@misc{gerken2022equivariance,
-      title={Equivariance versus Augmentation for Spherical Images}, 
-      author={Jan E. Gerken and Oscar Carlsson and Hampus Linander and Fredrik Ohlsson and Christoffer Petersson and Daniel Persson},
-      year={2022},
-      eprint={2202.03990},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{gerken2022,
+  title = {Equivariance versus {{Augmentation}} for {{Spherical Images}}},
+  booktitle = {Proceedings of the 39th {{International Conference}} on {{Machine Learning}}},
+  author = {Gerken, Jan E. and Carlsson, Oscar and Linander, Hampus and Ohlsson, Fredrik and Petersson, Christoffer and Persson, Daniel},
+  date = {2022-06-28},
+  eprint = {2202.03990},
+  eprinttype = {arxiv},
+  primaryclass = {cs},
+  pages = {7404--7421},
+  publisher = {{PMLR}},
+  doi = {10.48550/arXiv.2202.03990},
+  archiveprefix = {arXiv},
+  eventtitle = {International {{Conference}} on {{Machine Learning}}},
 }
 ```
