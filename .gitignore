@@ -1,8 +1,11 @@
-*.egg-info
-*.eggs
-__pycache__
+*.gz
+1
+MNIST_data
+.ipynb_checkpoints
+mlruns
+ml-runs
+checkpoints
 build
 dist
-*cache
-*.sif
-examples/mnist_sem_seg/datasets
+cache
+*.egg-info

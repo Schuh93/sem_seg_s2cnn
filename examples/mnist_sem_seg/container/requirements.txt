@@ -2,7 +2,7 @@ absl-py==0.10.0
 alembic==1.4.1
 argcomplete==1.12.3
 astunparse==1.6.3
-async-generator==1.10
+async-generator
 attrs==20.2.0
 backcall==0.2.0
 bleach==3.2.1
@@ -11,11 +11,11 @@ certifi==2020.6.20
 chardet==3.0.4
 click==8.0.3
 cloudpickle==1.6.0
-cupy-cuda111 @ https://github.com/cupy/cupy/releases/download/v10.0.0b1/cupy_cuda111-10.0.0b1-cp36-cp36m-manylinux1_x86_64.whl
+cupy-cuda111
 cxxfilt==0.3.0
 cycler==0.11.0
 databricks-cli==0.16.2
-dataclasses==0.8
+dataclasses
 decorator==4.4.2
 defusedxml==0.6.0
 dill==0.3.2
@@ -33,12 +33,10 @@ google-auth==1.22.1
 google-auth-oauthlib==0.4.1
 google-pasta==0.2.0
 googleapis-common-protos==1.52.0
-graphsurgeon==0.4.5
 greenlet==1.1.2
 grpcio==1.32.0
 gunicorn==20.1.0
 h5py==2.10.0
-horovod @ file:///opt/tensorflow/horovod-source/dist/horovod-0.20.0.tar.gz
 idna==2.10
 importlib-metadata==4.8.2
 iniconfig==1.1.1
@@ -52,7 +50,6 @@ json5==0.9.5
 jsonschema==3.2.0
 jupyter-client==6.1.7
 jupyter-core==4.6.3
-jupyter-tensorboard @ git+https://github.com/lspvic/jupyter_tensorboard.git@6f1c65518820bd2dfc6cb67c758284456d8f7584
 jupyterlab==1.2.14
 jupyterlab-pygments==0.1.2
 jupyterlab-server==1.2.0
@@ -78,9 +75,6 @@ nltk==3.4.5
 notebook==6.0.3
 numba==0.53.1
 numpy==1.17.2
-nvidia-dali-cuda110==0.26.0
-nvidia-dali-tf-plugin-cuda110==0.26.0
-nvtx-plugins==0.1.8
 oauthlib==3.1.0
 opencv-python-headless==4.5.1.48
 opt-einsum==3.3.0
@@ -107,7 +101,6 @@ pyasn1-modules==0.2.8
 Pygments==2.7.1
 pynvrtc==9.2
 pyparsing==2.4.7
-pyprof @ git+https://github.com/NVIDIA/PyProf@f86ed77ad7da1d381c994d59df704bf473f1a760
 pyrsistent==0.17.3
 pytest==6.2.3
 python-dateutil==2.8.1
@@ -127,14 +120,7 @@ smmap==5.0.0
 SQLAlchemy==1.4.27
 sqlparse==0.4.2
 tabulate==0.8.9
-tensorboard==2.3.0
-tensorboard-plugin-wit==1.7.0
-tensorflow @ file:///tmp/pip/tensorflow-2.3.1%2Bnv-cp36-cp36m-linux_x86_64.whl
-tensorflow-addons @ file:///opt/tensorflow/tf-addons/artifacts/tensorflow_addons-0.11.1-cp36-cp36m-linux_x86_64.whl
-tensorflow-datasets==3.2.1
-tensorflow-estimator==2.3.0
-tensorflow-metadata==0.24.0
-tensorrt==7.2.1.4
+tensorrt
 termcolor==1.1.0
 terminado==0.9.1
 testpath==0.4.4
@@ -147,7 +133,6 @@ tqdm==4.50.2
 traitlets==4.3.3
 typeguard==2.9.1
 typing-extensions==4.0.1
-uff==0.6.9
 urllib3==1.25.10
 wcwidth==0.2.5
 webencodings==0.5.1
