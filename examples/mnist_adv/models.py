@@ -1,4 +1,4 @@
-import torch
+import torch, copy
 import numpy as np, pytorch_lightning as pl
 from s2cnn import s2_near_identity_grid, so3_near_identity_grid, SO3Convolution, S2Convolution, so3_integrate
 
@@ -8,16 +8,16 @@ class ConvNet(pl.LightningModule):
     def __init__(self, hparams, train_data, test_data):
         super().__init__()
         
-        self.hparams = hparams
+        self.hparams = copy.deepcopy(hparams)
         self.train_data = train_data
         self.test_data = test_data
         
-        self.channels = hparams.channels
-        self.kernels = hparams.kernels
-        self.strides = hparams.strides
-        self.activation_fn = hparams.activation_fn
-        self.batch_norm = hparams.batch_norm
-        self.nodes = hparams.nodes
+        self.channels = self.hparams.channels.copy()
+        self.kernels = self.hparams.kernels.copy()
+        self.strides = self.hparams.strides.copy()
+        self.activation_fn = self.hparams.activation_fn
+        self.batch_norm = self.hparams.batch_norm
+        self.nodes = self.hparams.nodes.copy()
         
         self.loss_function = torch.nn.CrossEntropyLoss()
         
@@ -62,8 +62,6 @@ class ConvNet(pl.LightningModule):
                     raise NotImplementedError(f"Activation function must be in {possible_activation_fns}.")
                 
         self.dense = torch.nn.Sequential(*module_list)
-        
-        
         
     def forward(self, x):
         x = self.conv(x)
@@ -110,15 +108,18 @@ class ConvNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         loss = self.loss(x, y)
-#         mlflow.log_metric('train_loss', loss.item())
-#         self.log({'train_loss': loss.item()})
-        # add logs
+        correct = self.correct_predictions(x, y)
+        
         logs = {'loss': loss.cpu().item()}
-        return {'loss': loss, 'log': logs}
+        return {'loss': loss, 'train_correct': correct, 'log': logs}
     
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean().cpu().item()
-        return {'avg_train_loss': avg_loss}
+        train_correct = torch.stack([x['train_correct'] for x in outputs]).sum().cpu()
+        train_acc = train_correct / len(self.train_data)
+        
+        logs = {'train_loss': avg_loss, 'train_acc': train_acc}    
+        return {'train_loss': avg_loss, 'train_acc': train_acc, 'log': logs}
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -128,11 +129,11 @@ class ConvNet(pl.LightningModule):
     
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean().cpu().item()
-        test_correct = torch.stack([x['val_correct'] for x in outputs]).sum().cpu()
-        test_acc = test_correct / len(self.test_data)
+        val_correct = torch.stack([x['val_correct'] for x in outputs]).sum().cpu()
+        val_acc = val_correct / len(self.test_data)
 
-        logs = {'val_loss': avg_loss, 'val_acc': test_acc}        
-        return {'val_loss': avg_loss, 'val_acc': test_acc, 'log': logs}
+        logs = {'val_loss': avg_loss, 'val_acc': val_acc}        
+        return {'val_loss': avg_loss, 'val_acc': val_acc, 'log': logs}
 
     def test_step(self, batch, batch_idx):
         x, y = batch
@@ -180,16 +181,16 @@ class S2ConvNet(pl.LightningModule):
     def __init__(self, hparams, train_data, test_data):
         super().__init__()
         
-        self.hparams = hparams
+        self.hparams = copy.deepcopy(hparams)
         self.train_data = train_data
         self.test_data = test_data
         
-        self.channels = hparams.channels
-        self.bandlimit = hparams.bandlimit
-        self.kernel_max_beta = hparams.kernel_max_beta
-        self.activation_fn = hparams.activation_fn
-        self.batch_norm = hparams.batch_norm
-        self.nodes = hparams.nodes
+        self.channels = self.hparams.channels.copy()
+        self.bandlimit = self.hparams.bandlimit.copy()
+        self.kernel_max_beta = self.hparams.kernel_max_beta.copy()
+        self.activation_fn = self.hparams.activation_fn
+        self.batch_norm = self.hparams.batch_norm
+        self.nodes = self.hparams.nodes.copy()
         
         self.loss_function = torch.nn.CrossEntropyLoss()
         
@@ -318,18 +319,25 @@ class S2ConvNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         loss = self.loss(x, y)
+        correct = self.correct_predictions(x, y)
+        
         logs = {'loss': loss.cpu().item()}
-        return {'loss': loss, 'log': logs}
+        return {'loss': loss, 'train_correct': correct, 'log': logs}
     
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean().cpu().item()
-        return {'avg_train_loss': avg_loss}
+        train_correct = torch.stack([x['train_correct'] for x in outputs]).sum().cpu()
+        train_acc = train_correct / len(self.train_data)
+        
+        logs = {'train_loss': avg_loss, 'train_acc': train_acc}    
+        return {'train_loss': avg_loss, 'train_acc': train_acc, 'log': logs}
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
         loss = self.loss(x, y)
         correct = self.correct_predictions(x, y)
         return {'val_loss': loss, 'val_correct': correct}
+
     
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean().cpu().item()
@@ -352,6 +360,10 @@ class S2ConvNet(pl.LightningModule):
 
         logs = {'test_loss': avg_loss, 'test_acc': test_acc}        
         return {'test_loss': avg_loss, 'test_acc': test_acc, 'log': logs}
+    
+        avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean().cpu().item()
+        test_correct = torch.stack([x['test_correct'] for x in outputs]).sum().cpu()
+        test_acc = test_correct / len(self.test_data)
 
     def get_progress_bar_dict(self):
         # call .item() only once but store elements without graphs
