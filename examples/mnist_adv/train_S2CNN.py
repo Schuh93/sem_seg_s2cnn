@@ -3,7 +3,7 @@ import numpy as np, pytorch_lightning as pl
 from pytorch_lightning.loggers import MLFlowLogger
 from mlflow.tracking.artifact_utils import get_artifact_uri, _get_root_uri_and_artifact_path
 from data_loader import load_train_data, load_test_data
-from models import ConvNet
+from models import S2ConvNet
 from mlflow_helper import init_mlf_logger
 
 
@@ -18,8 +18,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--lr', type=int, default=1e-3)
     parser.add_argument('--channels', type=int, nargs='+')
-    parser.add_argument('--kernels', type=int, nargs='+')
-    parser.add_argument('--strides', type=int, nargs='+')
+    parser.add_argument('--bandlimit', type=int, nargs='+')
+    parser.add_argument('--kernel_max_beta', type=float, nargs='+')
     parser.add_argument('--activation_fn', type=str, default='ReLU')
     parser.add_argument('--batch_norm', action='store_true', default=True)
     parser.add_argument('--nodes', type=int, nargs='+')
@@ -41,12 +41,12 @@ if __name__ == '__main__':
     hparams.lr = args.lr
     hparams.weight_decay = args.weight_decay
     hparams.channels = args.channels
-    hparams.kernels = args.kernels
-    hparams.strides = args.strides
+    hparams.bandlimit = args.bandlimit
+    hparams.kernel_max_beta = args.kernel_max_beta
     hparams.activation_fn = args.activation_fn
     hparams.batch_norm = args.batch_norm
     hparams.nodes = args.nodes
-
+    
     if args.train_rot:
         train_path = "s2_mnist_train_dwr_" + str(args.train_samples) + ".gz"
     else:
@@ -69,16 +69,16 @@ if __name__ == '__main__':
 
     mlf_logger, artifact_path = init_mlf_logger(experiment_name='model_training', tracking_uri=tracking_uri, tags=tag_dict)
     
-    model = ConvNet(hparams, train_data, test_data)
+    model = S2ConvNet(hparams, train_data, test_data)
     mlf_logger.experiment.set_tag(run_id=mlf_logger.run_id, key="model", value=model.__class__.__name__)
-
+    
     print(f"Number of trainable / total parameters: {model.count_trainable_parameters(), model.count_parameters()}")
 
     monitor = 'val_acc'
     mode = 'max'
     early_stopping = pl.callbacks.EarlyStopping(monitor=monitor, min_delta=args.min_delta, patience=args.patience, mode=mode)
     checkpoint = pl.callbacks.model_checkpoint.ModelCheckpoint(filepath=artifact_path, monitor=monitor, mode=mode)
-
+    
     log_dict = {'es_min_delta': early_stopping.min_delta,
                'es_mode': early_stopping.mode,
                'es_monitor': early_stopping.monitor,
