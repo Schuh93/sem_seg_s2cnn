@@ -1,4 +1,4 @@
-import torch
+import torch, os, pickle
 import eagerpy as ep, numpy as np
 from typing import Tuple, List
 from tqdm.notebook import tqdm
@@ -61,3 +61,43 @@ def batched_accuracy(fmodel, images, labels, bs) -> np.float64:
         clean_accuracy.append(accuracy(fmodel, ep.astensor(images[bs*i:bs*(i+1)].cuda()), ep.astensor(labels[bs*i:bs*(i+1)].cuda())))
         
     return np.mean(clean_accuracy)
+
+
+def batched_predictions(model, images, bs):
+    n_samples = len(images)
+    assert n_samples % bs == 0, f'The batch size ({bs}) must be a divisor of number of samples ({n_samples}).'
+    
+    clean_pred = []
+    for i in tqdm(range(n_samples//bs)):
+        output = model(images[bs*i:bs*(i+1)].cuda())
+        clean_pred.append(torch.max(output, 1)[1].cpu())
+        
+    return torch.stack(clean_pred).flatten()
+
+
+def batched_predictions_eps(model, advs, bs):
+    return torch.stack([batched_predictions(model, advs[i], bs) for i in range(len(advs))])
+
+
+def batched_logits(model, images, bs):
+    n_samples = len(images)
+    assert n_samples % bs == 0, f'The batch size ({bs}) must be a divisor of number of samples ({n_samples}).'
+    
+    logits = []
+    for i in tqdm(range(n_samples//bs)):
+        logits.append(model(images[bs*i:bs*(i+1)].cuda()).detach().cpu())
+        
+    return torch.stack(logits).reshape(-1,10)
+
+
+def batched_logits_eps(model, advs, bs):
+    return torch.stack([batched_logits(model, advs[i], bs) for i in range(len(advs))])
+
+
+def save_pickle(save_path, filename, data):
+    if os.path.isfile(os.path.join(save_path, filename)):
+        filename = str(time.time()) + filename
+        print('File already existed, timestamp was prepended to filename.')
+    
+    with open(os.path.join(save_path, filename), 'wb') as file:
+        pickle.dump(data, file)

@@ -10,3 +10,4 @@ dist
 cache
 *.egg-info
 __pycache__
+*.pdf
