@@ -21,6 +21,12 @@ baseline:
 
 1668278459
 
+untrained:
+1669374570
+
+partially trained for training observation:
+1669397724
+
 S2CNN:
 
 1668559990

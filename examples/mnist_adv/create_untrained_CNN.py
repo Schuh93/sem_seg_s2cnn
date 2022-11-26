@@ -2,7 +2,7 @@ import torch, argparse, gzip, os, warnings, copy, time, mlflow, pickle
 import numpy as np, pytorch_lightning as pl
 from pytorch_lightning.loggers import MLFlowLogger
 from mlflow.tracking.artifact_utils import get_artifact_uri, _get_root_uri_and_artifact_path
-from data_loader import load_train_data, load_test_data
+from data_loader import load_test_data
 from models import ConvNet
 from mlflow_helper import init_mlf_logger
 
@@ -13,44 +13,30 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', type=str)
-    parser.add_argument('--train_batch_size', type=int, default=32)
     parser.add_argument('--test_batch_size', type=int, default=32)
     parser.add_argument('--num_workers', type=int, default=0)
-    parser.add_argument('--lr', type=int, default=1e-3)
     parser.add_argument('--channels', type=int, nargs='+')
     parser.add_argument('--kernels', type=int, nargs='+')
     parser.add_argument('--strides', type=int, nargs='+')
     parser.add_argument('--activation_fn', type=str, default='ReLU')
     parser.add_argument('--batch_norm', action='store_true', default=True)
-    parser.add_argument('--nodes', type=int, nargs='+')
-    parser.add_argument('--weight_decay', type=float, default=0.)
-    parser.add_argument('--train_samples', type=int, default=6e4)
-    parser.add_argument('--train_rot', action='store_true', default=True)
+    parser.add_argument('--nodes', type=int, nargs='+')   
     parser.add_argument('--test_rot', action='store_true', default=True)
-    parser.add_argument('--max_epochs', type=int, default=100)
-    parser.add_argument('--min_delta', type=float, default=0.)
-    parser.add_argument('--patience', type=int, default=10)
-    
+
     args = parser.parse_args()
     
     hparams = argparse.Namespace()
     hparams.name = args.name
-    hparams.train_batch_size = args.train_batch_size
     hparams.test_batch_size = args.test_batch_size
     hparams.num_workers = args.num_workers
-    hparams.lr = args.lr
-    hparams.weight_decay = args.weight_decay
     hparams.channels = args.channels
     hparams.kernels = args.kernels
     hparams.strides = args.strides
     hparams.activation_fn = args.activation_fn
     hparams.batch_norm = args.batch_norm
     hparams.nodes = args.nodes
-
-    if args.train_rot:
-        train_path = "s2_mnist_train_dwr_" + str(args.train_samples) + ".gz"
-    else:
-        raise NotImplementedError('A non-rotated training set does not exist yet.')
+    hparams.lr = 1e-3
+    hparams.weight_decay = 0
 
     if args.test_rot:
         test_path = "s2_mnist_cs1.gz"
@@ -60,7 +46,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('No GPU found.')
     
-    train_data, test_data = load_train_data(train_path), load_test_data(test_path)
+    test_data = load_test_data(test_path)
     
     tracking_uri='sqlite:///mlruns/database.db'
 
@@ -69,37 +55,29 @@ if __name__ == '__main__':
 
     mlf_logger, artifact_path = init_mlf_logger(experiment_name='model_training', tracking_uri=tracking_uri, tags=tag_dict)
     
-    model = ConvNet(hparams, train_data, test_data)
-    mlf_logger.experiment.set_tag(run_id=mlf_logger.run_id, key="model", value=model.__class__.__name__)
+    model = ConvNet(hparams, None, test_data)
+    mlf_logger.experiment.set_tag(run_id=mlf_logger.run_id, key="model", value=model.__class__.__name__+'_u')
 
-    print(f"Number of trainable / total parameters: {model.count_trainable_parameters(), model.count_parameters()}")
+    print(f"Number of total parameters: {model.count_parameters()}")
 
     monitor = 'val_acc'
     mode = 'max'
-    early_stopping = pl.callbacks.EarlyStopping(monitor=monitor, min_delta=args.min_delta, patience=args.patience, mode=mode)
     checkpoint = pl.callbacks.model_checkpoint.ModelCheckpoint(filepath=artifact_path, monitor=monitor, mode=mode)
 
-    log_dict = {'es_min_delta': early_stopping.min_delta,
-               'es_mode': early_stopping.mode,
-               'es_monitor': early_stopping.monitor,
-               'es_patience': early_stopping.patience,
-               'max_epochs': args.max_epochs,
-               'train_samples': len(train_data),
-               'train_rot': args.train_rot,
-               'test_rot': args.test_rot,
-               'trainable_params': model.count_trainable_parameters(),
+    log_dict = {'test_rot': args.test_rot,
                'total_params': model.count_parameters()}
 
     mlf_logger.log_hyperparams(log_dict)
 
-    trainer = pl.Trainer(gpus=1, max_epochs=args.max_epochs, logger=mlf_logger, early_stop_callback=early_stopping, checkpoint_callback=checkpoint)
+    trainer = pl.Trainer(gpus=1, logger=mlf_logger, checkpoint_callback=checkpoint)
+    
+    checkpoint_dict = {'state_dict': copy.deepcopy(model.state_dict()),
+                      'hyper_parameters': pl.utilities.parsing.AttributeDict(vars(hparams))
+                      }
+    
+    assert not os.path.isfile(os.path.join(artifact_path, 'untrained.ckpt'))
+    torch.save(checkpoint_dict, os.path.join(artifact_path, 'untrained.ckpt'))
 
-    trainer.fit(model)
-
-    mlf_logger.experiment.log_param(run_id=mlf_logger.run_id, key='es_stopped_epoch', value=early_stopping.stopped_epoch)
-
-    best_model = torch.load(checkpoint.best_model_path)
-    model.load_state_dict(best_model['state_dict'])
     model.eval()
     test_results = trainer.test(model)
     

@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_samples', type=int, default=6e4)
     parser.add_argument('--train_rot', action='store_true', default=True)
     parser.add_argument('--test_rot', action='store_true', default=True)
-    parser.add_argument('--max_epochs', type=int, default=100)
+    parser.add_argument('--max_epochs', type=int, default=10)
     parser.add_argument('--min_delta', type=float, default=0.)
     parser.add_argument('--patience', type=int, default=10)
     
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     monitor = 'val_acc'
     mode = 'max'
     early_stopping = pl.callbacks.EarlyStopping(monitor=monitor, min_delta=args.min_delta, patience=args.patience, mode=mode)
-    checkpoint = pl.callbacks.model_checkpoint.ModelCheckpoint(filepath=artifact_path, monitor=monitor, mode=mode)
+    checkpoint = pl.callbacks.model_checkpoint.ModelCheckpoint(filepath=artifact_path, monitor=monitor, mode=mode, save_top_k=20)
 
     log_dict = {'es_min_delta': early_stopping.min_delta,
                'es_mode': early_stopping.mode,
@@ -93,6 +93,13 @@ if __name__ == '__main__':
     mlf_logger.log_hyperparams(log_dict)
 
     trainer = pl.Trainer(gpus=1, max_epochs=args.max_epochs, logger=mlf_logger, early_stop_callback=early_stopping, checkpoint_callback=checkpoint)
+    
+    checkpoint_dict = {'state_dict': copy.deepcopy(model.state_dict()),
+                      'hyper_parameters': pl.utilities.parsing.AttributeDict(vars(hparams))
+                      }
+    
+    assert not os.path.isfile(os.path.join(artifact_path, 'untrained.ckpt'))
+    torch.save(checkpoint_dict, os.path.join(artifact_path, 'untrained.ckpt'))
 
     trainer.fit(model)
 
