@@ -27,7 +27,6 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-
     tracking_uri = 'sqlite:///mlruns/database.db'
     mlflow.set_tracking_uri(tracking_uri)
     df=mlflow.search_runs(experiment_names=['model_training'])
@@ -46,7 +45,6 @@ if __name__ == '__main__':
     hparams = argparse.Namespace(**best_model['hyper_parameters'])
     model = ConvNet(hparams, None, None).eval()
     model.load_state_dict(best_model['state_dict'])
-
 
     TEST_PATH = "s2_mnist_cs1.gz"
     test_data = load_test_data(TEST_PATH)

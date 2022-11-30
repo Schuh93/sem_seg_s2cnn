@@ -10,6 +10,7 @@ from attack_helper import run_batched_attack_cpu, batched_accuracy, batched_pred
 from mlflow.tracking.artifact_utils import get_artifact_uri
 from functools import partialmethod
 
+
 if __name__ == '__main__':
     
     tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
