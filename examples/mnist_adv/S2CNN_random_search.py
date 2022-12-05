@@ -18,8 +18,11 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', type=int)
     parser.add_argument('--epsilons', type=int, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10, 20, 50, 100])
     parser.add_argument('--gen_samples', type=int, default=10000)
+    parser.add_argument('--mode', type=str, default='mean')
     
     args = parser.parse_args()
+    
+    assert args.mode in ['mean', 'max'], "Supported modes are 'min' and 'max'."
     
     tracking_uri = 'sqlite:///mlruns/database.db'
     mlflow.set_tracking_uri(tracking_uri)
@@ -67,10 +70,15 @@ if __name__ == '__main__':
         success.append(success_.raw.cpu())
 
     success = torch.stack(success).permute(1,2,0)
-    success_per_sample = ep.astensor(success).float32().mean(axis=-1).raw
+    if args.mode == 'mean':
+        success_per_sample = ep.astensor(success).float32().mean(axis=-1).raw
+        name = attack.__class__.__name__
+    else:
+        success_per_sample = torch.amax(ep.astensor(success).float32().raw, dim=-1)
+        name = attack.__class__.__name__ + '_max'
+        
     success_rate = torch.mean(success_per_sample, dim=-1)
-    
-    save_path = os.path.join(artifact_path, attack.__class__.__name__)
+    save_path = os.path.join(artifact_path, name)
 
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
