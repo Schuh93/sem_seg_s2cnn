@@ -21,12 +21,12 @@ if __name__ == '__main__':
     parser.add_argument('--kernels', type=int, nargs='+')
     parser.add_argument('--strides', type=int, nargs='+')
     parser.add_argument('--activation_fn', type=str, default='ReLU')
-    parser.add_argument('--batch_norm', action='store_true', default=True)
+    parser.add_argument('--batch_norm', action='store_false', default=True)
     parser.add_argument('--nodes', type=int, nargs='+')
     parser.add_argument('--weight_decay', type=float, default=0.)
     parser.add_argument('--train_samples', type=int, default=6e4)
-    parser.add_argument('--train_rot', action='store_true', default=True)
-    parser.add_argument('--test_rot', action='store_true', default=True)
+    parser.add_argument('--train_rot', action='store_false', default=True)
+    parser.add_argument('--test_rot', action='store_false', default=True)
     parser.add_argument('--max_epochs', type=int, default=100)
     parser.add_argument('--min_delta', type=float, default=0.)
     parser.add_argument('--patience', type=int, default=10)
@@ -50,17 +50,21 @@ if __name__ == '__main__':
     if args.train_rot:
         train_path = "s2_mnist_train_dwr_" + str(args.train_samples) + ".gz"
     else:
-        raise NotImplementedError('A non-rotated training set does not exist yet.')
+        train_path = "s2_mnist_train_sphere_center_" + str(args.train_samples) + ".gz"
 
     if args.test_rot:
         test_path = "s2_mnist_cs1.gz"
     else:
-        raise NotImplementedError('A non-rotated test set does not exist yet.')
+        test_path = "s2_mnist_test_sphere_center.gz"
     
     if not torch.cuda.is_available():
         raise RuntimeError('No GPU found.')
     
-    train_data, test_data = load_train_data(train_path), load_test_data(test_path)
+    train_data = load_train_data(train_path)
+    if args.test_rot:
+        test_data = load_test_data(test_path)
+    else:
+        test_data = load_train_data(test_path)
     
     tracking_uri='sqlite:///mlruns/database.db'
 

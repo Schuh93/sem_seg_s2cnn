@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--epsilons', type=int, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10])
     parser.add_argument('--rel_stepsize', type=float, default=0.01/0.3)
     parser.add_argument('--steps', type=int, default=70)
-    parser.add_argument('--random_start', action='store_true', default=True)
+    parser.add_argument('--random_start', action='store_false', default=True)
     parser.add_argument('--n_repeat', type=int, default=3)
     
     args = parser.parse_args()

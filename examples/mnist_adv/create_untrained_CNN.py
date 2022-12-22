@@ -19,9 +19,9 @@ if __name__ == '__main__':
     parser.add_argument('--kernels', type=int, nargs='+')
     parser.add_argument('--strides', type=int, nargs='+')
     parser.add_argument('--activation_fn', type=str, default='ReLU')
-    parser.add_argument('--batch_norm', action='store_true', default=True)
+    parser.add_argument('--batch_norm', action='store_false', default=True)
     parser.add_argument('--nodes', type=int, nargs='+')   
-    parser.add_argument('--test_rot', action='store_true', default=True)
+    parser.add_argument('--test_rot', action='store_false', default=True)
 
     args = parser.parse_args()
     
