@@ -1,7 +1,7 @@
 import torch, pickle, argparse, os, warnings, copy, time, mlflow
 import numpy as np, pytorch_lightning as pl, matplotlib.pyplot as plt, eagerpy as ep
 from models import ConvNet
-from data_loader import load_test_data
+from data_loader import load_test_data, load_train_data
 from foolbox import PyTorchModel
 from foolbox.attacks import LinfProjectedGradientDescentAttack
 from foolbox.attacks.base import Repeated
@@ -31,6 +31,7 @@ if __name__ == '__main__':
     mlflow.set_tracking_uri(tracking_uri)
     df=mlflow.search_runs(experiment_names=['model_training'])
     run_id=df[df['tags.mlflow.runName']==str(args.run_name)]['run_id'].values[0]
+    test_rot = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.test_rot'].values[0])
     artifact_path = get_artifact_uri(run_id=run_id, tracking_uri=tracking_uri)
     dirs=os.listdir(artifact_path)
 
@@ -46,9 +47,12 @@ if __name__ == '__main__':
     model = ConvNet(hparams, None, None).eval()
     model.load_state_dict(best_model['state_dict'])
 
-    TEST_PATH = "s2_mnist_cs1.gz"
-    test_data = load_test_data(TEST_PATH)
-
+    if test_rot:
+        TEST_PATH = "s2_mnist_cs1.gz"
+        test_data = load_test_data(TEST_PATH)
+    else:
+        TEST_PATH = "s2_mnist_test_sphere_center.gz"
+        test_data = load_train_data(TEST_PATH)
 
     total = args.total
     bs = args.bs
