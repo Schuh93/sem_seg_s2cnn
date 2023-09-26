@@ -1,6 +1,7 @@
 #!/bin/bash
 export PYTHONWARNINGS="ignore"
 
+train_samples=30000
 
 for train_samples in 10000 20000 30000 40000 50000 60000
 do
@@ -14,8 +15,7 @@ do
                 --nodes 64 32 \
                 --train_samples $train_samples \
                 --activation_fn "LeakyReLU" \
-                --train_rot \
-                --test_rot;
+                --flat;
     done
 done
 
@@ -32,8 +32,7 @@ do
                 --nodes 64 32 \
                 --train_samples $train_samples \
                 --activation_fn "LeakyReLU" \
-                --train_rot \
-                --test_rot;
+                --flat;
     done
 done
 
@@ -50,7 +49,6 @@ do
                 --nodes 64 32 \
                 --train_samples $train_samples \
                 --activation_fn "LeakyReLU" \
-                --train_rot \
-                --test_rot;
+                --flat;
     done
 done

@@ -1,6 +1,6 @@
 import torch, pickle, argparse, os, warnings, copy, time, mlflow
 import numpy as np, pytorch_lightning as pl, matplotlib.pyplot as plt, eagerpy as ep
-from models import ConvNet
+from models import ConvNet, CConvNet
 from data_loader import load_test_data, load_train_data
 from foolbox import PyTorchModel
 from foolbox.attacks import LinfProjectedGradientDescentAttack
@@ -31,10 +31,9 @@ if __name__ == '__main__':
     mlflow.set_tracking_uri(tracking_uri)
     df=mlflow.search_runs(experiment_names=['model_training'])
     run_id=df[df['tags.mlflow.runName']==str(args.run_name)]['run_id'].values[0]
-    test_rot = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.test_rot'].values[0])
     artifact_path = get_artifact_uri(run_id=run_id, tracking_uri=tracking_uri)
     dirs=os.listdir(artifact_path)
-
+    
     for s in dirs:
         if s.find('.ckpt') >= 0:
             checkpoint = s
@@ -44,15 +43,39 @@ if __name__ == '__main__':
 
     best_model = torch.load(checkpoint_path)
     hparams = argparse.Namespace(**best_model['hyper_parameters'])
-    model = ConvNet(hparams, None, None).eval()
+    if df[df['tags.mlflow.runName']==str(args.run_name)]['tags.model'].values[0] == 'ConvNet':
+        model = ConvNet(hparams, None, None).eval()
+    elif df[df['tags.mlflow.runName']==str(args.run_name)]['tags.model'].values[0] == 'CConvNet':
+        model = CConvNet(hparams, None, None).eval()
+    else:
+        raise NotImplementedError(f"Model has to be 'ConvNet' or 'CConvNet'. Got {df[df['tags.mlflow.runName']==str(args.run_name)]['tags.model'].values[0]}.")
+        
     model.load_state_dict(best_model['state_dict'])
 
-    if test_rot:
-        TEST_PATH = "s2_mnist_cs1.gz"
-        test_data = load_test_data(TEST_PATH)
+    test_rot = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.test_rot'].values[0])
+    
+    if df[df['tags.mlflow.runName']==str(args.run_name)]['params.flat'].values[0] is None:
+        flat = False
     else:
-        TEST_PATH = "s2_mnist_test_sphere_center.gz"
+        flat = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.flat'].values[0])
+    
+    if flat:
+        padded_img_size = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.padded_img_size'].values[0])
+        
+        if test_rot:
+            TEST_PATH = "flat_mnist_test_aug_" + str(padded_img_size[0]) + "x" + str(padded_img_size[1]) + ".gz"
+        else:
+            TEST_PATH = "flat_mnist_test_" + str(padded_img_size[0]) + "x" + str(padded_img_size[1]) + ".gz"
+        
         test_data = load_train_data(TEST_PATH)
+        
+    else:    
+        if test_rot:
+            TEST_PATH = "s2_mnist_cs1.gz"
+            test_data = load_test_data(TEST_PATH)
+        else:
+            TEST_PATH = "s2_mnist_test_sphere_center.gz"
+            test_data = load_train_data(TEST_PATH)
 
     total = args.total
     bs = args.bs

@@ -3,7 +3,7 @@ import numpy as np, pytorch_lightning as pl
 from pytorch_lightning.loggers import MLFlowLogger
 from mlflow.tracking.artifact_utils import get_artifact_uri, _get_root_uri_and_artifact_path
 from data_loader import load_train_data, load_test_data
-from models import ConvNet
+from models import ConvNet, CConvNet
 from mlflow_helper import init_mlf_logger
 
 
@@ -25,6 +25,8 @@ if __name__ == '__main__':
     parser.add_argument('--nodes', type=int, nargs='+')
     parser.add_argument('--weight_decay', type=float, default=0.)
     parser.add_argument('--train_samples', type=int, default=6e4)
+    parser.add_argument('--flat', action='store_true', default=False)
+    parser.add_argument('--padded_img_size', type=int, nargs='+', default=[60,60])
     parser.add_argument('--train_rot', action='store_false', default=True)
     parser.add_argument('--test_rot', action='store_false', default=True)
     parser.add_argument('--max_epochs', type=int, default=100)
@@ -46,22 +48,33 @@ if __name__ == '__main__':
     hparams.activation_fn = args.activation_fn
     hparams.batch_norm = args.batch_norm
     hparams.nodes = args.nodes
-
-    if args.train_rot:
-        train_path = "s2_mnist_train_dwr_" + str(args.train_samples) + ".gz"
+    
+    if args.flat:
+        if args.train_rot:
+            train_path = "flat_mnist_train_aug_" + str(args.padded_img_size[0]) + "x" + str(args.padded_img_size[1]) + "_" +  str(args.train_samples) + ".gz"
+        else:
+            train_path = "flat_mnist_train_" + str(args.padded_img_size[0]) + "x" + str(args.padded_img_size[1]) + "_" +  str(args.train_samples) + ".gz"
+        
+        if args.test_rot:
+            test_path = "flat_mnist_test_aug_" + str(args.padded_img_size[0]) + "x" + str(args.padded_img_size[1]) + ".gz"
+        else:
+            test_path = "flat_mnist_test_" + str(args.padded_img_size[0]) + "x" + str(args.padded_img_size[1]) + ".gz"
     else:
-        train_path = "s2_mnist_train_sphere_center_" + str(args.train_samples) + ".gz"
+        if args.train_rot:
+            train_path = "s2_mnist_train_dwr_" + str(args.train_samples) + ".gz"
+        else:
+            train_path = "s2_mnist_train_sphere_center_" + str(args.train_samples) + ".gz"
 
-    if args.test_rot:
-        test_path = "s2_mnist_cs1.gz"
-    else:
-        test_path = "s2_mnist_test_sphere_center.gz"
+        if args.test_rot:
+            test_path = "s2_mnist_cs1.gz"
+        else:
+            test_path = "s2_mnist_test_sphere_center.gz"
     
     if not torch.cuda.is_available():
         raise RuntimeError('No GPU found.')
     
     train_data = load_train_data(train_path)
-    if args.test_rot:
+    if args.test_rot and not args.flat:
         test_data = load_test_data(test_path)
     else:
         test_data = load_train_data(test_path)
@@ -73,7 +86,10 @@ if __name__ == '__main__':
 
     mlf_logger, artifact_path = init_mlf_logger(experiment_name='model_training', tracking_uri=tracking_uri, tags=tag_dict)
     
-    model = ConvNet(hparams, train_data, test_data)
+    if args.flat and args.train_rot:
+        model = CConvNet(hparams, train_data, test_data)
+    else:
+        model = ConvNet(hparams, train_data, test_data)
     mlf_logger.experiment.set_tag(run_id=mlf_logger.run_id, key="model", value=model.__class__.__name__)
 
     print(f"Number of trainable / total parameters: {model.count_trainable_parameters(), model.count_parameters()}")
@@ -89,10 +105,15 @@ if __name__ == '__main__':
                'es_patience': early_stopping.patience,
                'max_epochs': args.max_epochs,
                'train_samples': len(train_data),
+               'flat': args.flat,
+               'padded_img_size': args.padded_img_size,
                'train_rot': args.train_rot,
                'test_rot': args.test_rot,
                'trainable_params': model.count_trainable_parameters(),
                'total_params': model.count_parameters()}
+    
+    if not args.flat:
+        del log_dict['padded_img_size']
 
     mlf_logger.log_hyperparams(log_dict)
 
