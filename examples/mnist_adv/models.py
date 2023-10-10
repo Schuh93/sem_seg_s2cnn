@@ -212,7 +212,12 @@ class S2ConvNet(pl.LightningModule):
         
         module_list = []
         self.channels.insert(0,1) # greyscale
-        self.bandlimit.insert(0,30) # depends on image size
+        
+        if not hasattr(self.hparams, 'image_size'):
+            self.bandlimit.insert(0,30) # depends on image size
+        else:
+            assert self.hparams.image_size % 2 == 0
+            self.bandlimit.insert(0, self.hparams.image_size//2)
         
         in_ch = self.channels[0]
         out_ch = self.channels[1]
