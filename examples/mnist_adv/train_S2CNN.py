@@ -48,6 +48,8 @@ if __name__ == '__main__':
     hparams.activation_fn = args.activation_fn
     hparams.batch_norm = args.batch_norm
     hparams.nodes = args.nodes
+    hparams.image_size = args.padded_img_size[0]
+    
     
     if args.flat:
         if args.train_rot:

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', type=int)
     parser.add_argument('--total', type=int, default=10000)
     parser.add_argument('--bs', type=int, default=20)
-    parser.add_argument('--epsilons', type=int, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10])
+    parser.add_argument('--epsilons', type=float, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10])
     parser.add_argument('--rel_stepsize', type=float, default=0.05)
     parser.add_argument('--steps', type=int, default=50)
     parser.add_argument('--random_start', action='store_false', default=True)
