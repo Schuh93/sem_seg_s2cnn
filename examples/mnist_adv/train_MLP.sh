@@ -2,7 +2,7 @@
 export PYTHONWARNINGS="ignore"
 
 
-for train_samples in 10000 20000 30000 40000 50000 60000
+for train_samples in 80000 100000 120000 240000 600000
 do
     for i in {1..3}
     do
@@ -17,7 +17,7 @@ do
 done
 
 
-for train_samples in 10000 20000 30000 40000 50000 60000
+for train_samples in 80000 100000 120000 240000 600000
 do
     for i in {1..3}
     do
@@ -32,7 +32,7 @@ do
 done
 
 
-for train_samples in 10000 20000 30000 40000 50000 60000
+for train_samples in 80000 100000 120000 240000 600000
 do
     for i in {1..3}
     do
@@ -47,7 +47,7 @@ do
 done
 
 
-for train_samples in 10000 20000 30000 40000 50000 60000
+for train_samples in 80000 100000 120000 240000 600000
 do
     for i in {1..3}
     do
@@ -63,7 +63,7 @@ do
 done
 
 
-for train_samples in 10000 20000 30000 40000 50000 60000
+for train_samples in 80000 100000 120000 240000 600000
 do
     for i in {1..3}
     do
