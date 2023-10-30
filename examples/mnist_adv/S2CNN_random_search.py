@@ -16,7 +16,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--run_name', type=int)
-    parser.add_argument('--epsilons', type=int, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10, 20, 50, 100])
+    parser.add_argument('--epsilons', type=float, nargs='+', default=[0, 0.1, 0.25, 0.5, 1, 3, 5, 7.5, 10, 20, 50, 100])
     parser.add_argument('--gen_samples', type=int, default=10000)
     parser.add_argument('--mode', type=str, default='mean')
     

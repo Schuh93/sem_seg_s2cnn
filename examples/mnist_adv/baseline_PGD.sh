@@ -10,5 +10,5 @@ python baseline_PGD.py \
         --rel_stepsize 0.05 \
         --steps 50 \
         --epsilons 0 0.5 2.5 5 7.5 10 14 20 30 \
-        --bs 10
+        --bs 100
 done
