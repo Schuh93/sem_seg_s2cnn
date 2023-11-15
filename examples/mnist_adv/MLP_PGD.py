@@ -49,6 +49,8 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError(f"Model has to be 'MLP'. Got {df[df['tags.mlflow.runName']==str(args.run_name)]['tags.model'].values[0]}.")
         
+    model.load_state_dict(best_model['state_dict'])
+        
     test_rot = eval(df[df['tags.mlflow.runName']==str(args.run_name)]['params.test_rot'].values[0])
     
     if df[df['tags.mlflow.runName']==str(args.run_name)]['params.flat'].values[0] is None:
