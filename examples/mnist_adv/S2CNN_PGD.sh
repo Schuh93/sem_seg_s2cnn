@@ -3,9 +3,10 @@ export PYTHONWARNINGS="ignore"
 
 
 
-for run_names in 1667922245 1667928002 1667949243 1667987238 1668051244 1668063693 1668085318 1668110081
+for run_names in 1697050764 1697052959 1697061474 1697073402 1697096372 1697103093 1697110031 1697121241
 do
 python S2CNN_PGD.py \
         --run_name $run_names \
-        --bs 20
+        --epsilons 0 0.5 2.5 5 7.5 10 14 20 30 \
+        --bs 10
 done
